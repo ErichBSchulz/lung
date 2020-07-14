@@ -32,14 +32,20 @@ switch_p_v_vectorized = {"Total": np.vectorize(inversefunc(total)),
               "Lung": np.vectorize(inversefunc(lung)),
               "Chest": np.vectorize(inversefunc(chest_wall))}
 
+def asscalar(x):
+    is_list = hasattr(x, "item") # isinstance(x, list)
+    return x.item() if is_list else x
+    
+
 # report volumes as % of total TLC
 def volume_from_pressure(p, type = "Total"):
     func = switch_v_p.get(type, lambda: 'error bad type')
-    return func(p)
+    return asscalar(func(p))
 
 def pressure_from_volume(v, type = "Total"):
     func = switch_p_v.get(type, lambda: 'error bad type')
-    return func(v)
+    return asscalar(func(v))
+
 
 def volume_from_pressure_vectorized(p, type = "Total"):
     func = switch_v_p_vectorized.get(type, lambda: 'error bad type')
