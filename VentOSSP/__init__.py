@@ -42,9 +42,9 @@ def smooth(config, state, p):
         if not state.inhaling:
             state.inhaling = True
             state.PEEP = recursive_smooth(config.alphaS, state.PEEP, state.Vlow)
-        else:
-            state.vhigh = recursive_smooth(config.alphaR, state.vhigh, state.p)
-            state.Thigh = state.Thigh + 1
+    else:
+        state.vhigh = recursive_smooth(config.alphaR, state.vhigh, p)
+        state.Thigh = state.Thigh + 1
     if p <= state.vlow:
         state.vlow = recursive_smooth(config.alphaA, state.vlow, p)
         state.Vlow = p
