@@ -1,6 +1,4 @@
-"""
-Algorithm from https://arxiv.org/pdf/2006.03664.pdf
-"""
+import math
 from dataclasses import dataclass, asdict
 import pandas as pd
 @dataclass
@@ -33,6 +31,9 @@ def recursive_smooth(alpha, current, new):
 # config = config
 # state = status - mutated by function
 # p = latest pressure from pressure sensor
+"""
+Algorithm from https://arxiv.org/pdf/2006.03664.pdf
+"""
 def step(config, state, p):
     state.p = p # store value in state
     state.Tpeak = state.Tpeak + 1
@@ -77,3 +78,8 @@ def process_trace(trace, config, pressure_column="pressure"):
     results['phase'] = results['inhaling'].astype(int) * 10 + 5
     return results
 
+"""
+This utility function allows you to calculate an alpha coefficent as the sampling frequency changes
+"""
+def retune_alpha(alpha, new_frequency, starting_frequency=1):
+    return 2**(math.log2(alpha) * starting_frequency / new_frequency)
