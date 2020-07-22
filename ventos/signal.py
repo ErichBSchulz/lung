@@ -1,7 +1,8 @@
 """
 Algorithm from https://arxiv.org/pdf/2006.03664.pdf
 """
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
+import pandas as pd
 @dataclass
 class VentilatorStatus:
     p: float = 0 # current pressure (cmH2O)
@@ -32,7 +33,7 @@ def recursive_smooth(alpha, current, new):
 # config = config
 # state = status - mutated by function
 # p = latest pressure from pressure sensor
-def smooth(config, state, p):
+def step(config, state, p):
     state.p = p # store value in state
     state.Tpeak = state.Tpeak + 1
     if p >= state.vhigh:
@@ -60,3 +61,19 @@ def smooth(config, state, p):
     else:
         state.vlow = recursive_smooth(config.alphaR, state.vlow, p)
         state.Tlow = state.Tlow + 1
+
+# take a waveform and apply signal proccessing algorithm
+# returns a Pandas data frame
+def process_trace(trace, config, pressure_column="pressure"):
+    vs = VentilatorStatus()
+    sp = [] # container for processed signals
+    for i, row in trace.iterrows():
+        p = row[pressure_column]
+        t = row.time
+        step(config, vs, p)
+        sp.append(dict(asdict(vs), time=t))
+    results = pd.DataFrame.from_records(sp)
+    results['time_s'] = results['time'] / 1000
+    results['phase'] = results['inhaling'].astype(int) * 10 + 5
+    return results
+
