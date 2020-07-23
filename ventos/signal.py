@@ -21,6 +21,7 @@ class VentilatorConfig:
     alphaA: float  = 0.9 #envelope attack coefficient (0-1)
     alphaR: float  = 0.99 #envelope release coefficient (0-1)
     alphaS: float  = 0.9 # smoothing coefficient (0-1)
+    alphaN: float  = 0.9 # noise smoothing coefficient (0-1)
     sample_frequency: float  = 10 # sample rate (Hz)
 
 # generic smoothing function to apply return a weighted average of a new and old value
@@ -35,21 +36,21 @@ def recursive_smooth(alpha, current, new):
 Algorithm from https://arxiv.org/pdf/2006.03664.pdf
 """
 def step(config, state, p):
-    state.p = p # store value in state
+    state.p = recursive_smooth(config.alphaN, state.p, p) # store value in state
     state.Tpeak = state.Tpeak + 1
-    if p >= state.vhigh:
-        state.vhigh = recursive_smooth(config.alphaA, state.vhigh, p)
-        state.Vhigh = p
+    if state.p >= state.vhigh:
+        state.vhigh = recursive_smooth(config.alphaA, state.vhigh, state.p)
+        state.Vhigh = state.p
         state.Thigh = 0
         if not state.inhaling:
             state.inhaling = True
             state.PEEP = recursive_smooth(config.alphaS, state.PEEP, state.Vlow)
     else:
-        state.vhigh = recursive_smooth(config.alphaR, state.vhigh, p)
+        state.vhigh = recursive_smooth(config.alphaR, state.vhigh, state.p)
         state.Thigh = state.Thigh + 1
-    if p <= state.vlow:
-        state.vlow = recursive_smooth(config.alphaA, state.vlow, p)
-        state.Vlow = p
+    if state.p <= state.vlow:
+        state.vlow = recursive_smooth(config.alphaA, state.vlow, state.p)
+        state.Vlow = state.p
         state.Tlow = 0
         if state.inhaling:
             state.inhaling = False
@@ -60,19 +61,23 @@ def step(config, state, p):
                 state.RR = (60 * config.sample_frequency) / (state.Tpeak - state.Thigh)
             state.Tpeak = state.Thigh
     else:
-        state.vlow = recursive_smooth(config.alphaR, state.vlow, p)
+        state.vlow = recursive_smooth(config.alphaR, state.vlow, state.p)
         state.Tlow = state.Tlow + 1
 
 # take a waveform and apply signal proccessing algorithm
 # returns a Pandas data frame
 def process_trace(trace, config, pressure_column="pressure"):
+    next_time = -1 # ms
+    minimum_time_gap = 1000 / config.sample_frequency
     vs = VentilatorStatus()
     sp = [] # container for processed signals
     for i, row in trace.iterrows():
         p = row[pressure_column]
         t = row.time
-        step(config, vs, p)
-        sp.append(dict(asdict(vs), time=t))
+        if t > next_time:
+            step(config, vs, p)
+            sp.append(dict(asdict(vs), time=t))
+            next_time += minimum_time_gap
     results = pd.DataFrame.from_records(sp)
     results['time_s'] = results['time'] / 1000
     results['phase'] = results['inhaling'].astype(int) * 10 + 5
