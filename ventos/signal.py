@@ -23,6 +23,7 @@ class VentilatorConfig:
     alphaS: float  = 0.9 # smoothing coefficient (0-1)
     alphaN: float  = 0.9 # noise smoothing coefficient (0-1)
     sample_frequency: float  = 10 # sample rate (Hz)
+    min_breath_envelope_delta = 3 # cmH2O - this value prevents noise triggering a breath
 
 # generic smoothing function to apply return a weighted average of a new and old value
 # alpha is between and 1, the higher the alpha the slower the movement away
@@ -42,7 +43,7 @@ def step(config, state, p):
         state.vhigh = recursive_smooth(config.alphaA, state.vhigh, state.p)
         state.Vhigh = state.p
         state.Thigh = 0
-        if not state.inhaling:
+        if not state.inhaling and state.vhigh-state.vlow > config.min_breath_envelope_delta:
             state.inhaling = True
             state.PEEP = recursive_smooth(config.alphaS, state.PEEP, state.Vlow)
     else:
