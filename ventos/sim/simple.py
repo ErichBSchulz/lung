@@ -143,6 +143,8 @@ The Types are:
   }
 """
 
+litres_per_second_to_ml_per_minute = 60*1000
+
 def df_to_PIRDS(df):
     pirds = []
     for index, r in df.iterrows():
@@ -154,9 +156,9 @@ def df_to_PIRDS(df):
                       "ms": int(r.time), "val": int(round(r.pressure_2))})
         pirds.append({"event": "M",
                       "type": "F", "loc":"I",
-                      "ms": int(r.time), "val": int(round(r.flow_i * 60 * 1000))})
+                      "ms": int(r.time), "val": int(round(r.flow_i * litres_per_second_to_ml_per_minute))})
         pirds.append({"event": "M",
                       "type": "F", "loc":"E",
-                      "ms": int(r.time), "val": int(round(r.flow_e * 60 * 1000))})
+                      "ms": int(r.time), "val": int(round(r.flow_e * litres_per_second_to_ml_per_minute))})
     return pd.DataFrame.from_records(pirds)
 
