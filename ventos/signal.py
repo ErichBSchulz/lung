@@ -26,7 +26,7 @@ class VentilatorConfig:
     min_breath_envelope_delta = 3 # cmH2O - this value prevents noise triggering a breath
 
 # generic smoothing function to apply return a weighted average of a new and old value
-# alpha is between and 1, the higher the alpha the slower the movement away
+# alpha is between 0 and 1, the higher the alpha the slower the movement away
 def recursive_smooth(alpha, current, new):
     return alpha * current + (1-alpha) * new
 
