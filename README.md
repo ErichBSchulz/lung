@@ -3,10 +3,9 @@ Lung and Ventilation Models to support the [VentOS project](https://docs.google.
 
 Broadly the notebooks, and python codes, provide the following functionality:
 
-* a rudimentary lung and ventilator model (currently only capable of generating PCV traces)
-* code for generating test traces, complete with noise, and mocking of signals from dual pressure and flow sensors
-* applying signal processing filters to test traces
-
+* [a rudimentary lung and ventilator model](ventos/sim/simple.py) [[notebook](plots.iyynb)] (currently only capable of generating PCV traces)
+* [code for generating test traces](ventos/test_traces.py) [[demo notebook](test_traces.iyynb)], complete with noise, and mocking of signals from dual pressure and flow sensors. The `test_traces.py` script is executable from the command line and will repulate [a set of JSON files and plots](test_traces/) illustrating potential test cases.
+* [applying signal processing filters to test traces](ventos/signal.py) [[notebook](lung.iyynb)]
 
 ## notes to self
 
